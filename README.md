@@ -1,2 +1,104 @@
-# SE-NAC-CODE
-Official implementation of our paper on "Modeling strategies for speech enhancement in the latent space of a neural audio codec", exploring autoregressive and non-autoregressive strategies in both discrete and continuous representation spaces.
+# Modeling strategies for speech enhancement in the latent space of a neural audio codec
+
+This repository provides the official implementation of our paper on *[Modeling strategies for speech enhancement in the latent space of a neural audio codec](https://arxiv.org/abs/2510.26299)*. We explore different modeling strategies (autoregressive vs. non-autoregressive) and representation spaces (discrete vs. continuous) for speech enhancement using neural audio codecs and Conformer-based architectures.
+
+##  Overview
+
+Our work introduces and compares a family of generative speech enhancement models that systematically vary along two main axes:
+
+- **Representation Type**  
+  - Discrete tokens 
+  - Continuous latent vectors  
+
+- **Modeling Strategy**  
+  - Autoregressive (AR): Sequential prediction of clean speech representation  
+  - Non-Autoregressive (NAR): Parallel prediction of clean speech representation  
+
+The current release includes the following models:
+
+| Model Name | Modeling Strategy |  Input Representation | Output Representation | Trainer Script |
+|-------------|------|----------------|----------------|----------------|
+| **D-AR** | Autoregressive | Discrete |Discrete | `D_AR_Trainer.py` |
+| **D-NAR** | Non-Autoregressive | Discrete |Discrete | `D_NAR_Trainer.py` |
+| **D-NAR*** | Non-Autoregressive | Continuous |Discrete | `D_NAR_star_Trainer.py` |
+| **C-AR** | Autoregressive | Continuous | Continuous | `C_AR_Trainer.py` |
+| **C-NAR** | Non-Autoregressive | Continuous | Continuous | `C_NAR_Trainer.py` |
+
+Additional models—**C-FT**, **D-FT**, and **C-NAR-FT**—will be added soon.
+
+##  How the Code Works
+
+### 1. **Base Training Logic (`Trainer.py`)**
+
+The `Trainer` class encapsulates the components shared by all model variants:
+- Distributed training setup via `torch.distributed` and `mp.spawn`.
+- Core training and validation code.
+- Encoding, Decoding, and Tokenization methods using the DAC Model. 
+
+This file also contains the code for : 
+- Data loading through a custom dataset class (`labled_AudioDataset`).
+- Other helper functions
+
+
+---
+
+### 2. **Variant-Specific Trainers** 
+
+Each `[Model Name]_Trainer.py` file provides the full training loop for a given model variant by inheriting from the base `Trainer` and redefining the following methods:
+- `process_batch_train_audio()`  
+  Defines how the model processes noisy/clean audio pairs during training (e.g., encoding with DAC, quantization, and loss computation).
+  
+- `_denoise_validation()`  
+  Implements model-specific inference logic to reconstruct clean speech during validation and compute SI-SDR/STOI scores.
+  
+- `_save_checkpoint()`  
+  Saves model weights, optimizer states, and configuration parameters.
+  
+ while the `Models/` directory defines the corresponding architectures.
+ 
+### 3. **Audio Codec Integration**
+All variants use a pretrained **neural audio codec (DAC)** to:
+- Encode raw waveforms into either discrete or continuous latent representations.
+- Quantize embeddings via a learned vector quantizer.
+- Decode model outputs back to waveform space for objective and perceptual evaluation.
+
+This modular approach allows any compatible codec to be substituted, facilitating future experiments.
+
+##  Example: Running a Training Script
+
+To train a model, simply edit the configuration block at the top of `[Model_Name]_Trainer.py`:
+
+```python
+DAC_Model = "DAC_MODELS/weights_16khz.pth"
+DATA_PATHS = [
+    "Path/to/train-360/s1",
+    "Path/to/train-360/mix_single",
+    "Path/to/dev/s1",
+    "Path/to/dev/mix_single",
+]
+```
+
+Then launch distributed training:
+
+```bash
+python C_AR_Trainer.py
+```
+All checkpoints and reconstructed audio samples will be automatically saved under the corresponding directories
+
+## Coming Soon
+
+- Additional model variants (**C-FT**, **D-FT**, **C-NAR-FT**)  
+- Pretrained checkpoints  
+- Evaluation metrics and inference scripts
+
+---
+
+If you find this code useful, please star the project and consider citing:
+```
+@article{kammoun2025modeling,
+  title={Modeling strategies for speech enhancement in the latent space of a neural audio codec},
+  author={Kammoun, Sofiene and Alameda-Pineda, Xavier and Leglaive, Simon},
+  journal={arXiv preprint arXiv:2510.26299},
+  year={2025}
+}
+```
