@@ -1,0 +1,164 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Oct 31 11:14:23 2025
+
+@author: root
+"""
+
+import torch
+import librosa
+from torch.utils.data import  DataLoader
+import torch.multiprocessing as mp
+from torch.utils.data.distributed import DistributedSampler
+from torch.distributed import  destroy_process_group
+import dac 
+from Models.D_AR import D_AR_Model
+from Trainer import Trainer, labled_AudioDataset, cosine_decay, ddp_setup, par_count
+
+
+"""
+
+TRAINING PARAMETERS
+
+"""
+device='cuda'
+DAC_Model ="DAC_MODELS/weights_16khz.pth"
+DATA_PATHS = [
+    "Path/to/train-360/s1",
+    "Path/to/train-360/mix_single",
+    "Path/to/dev/s1",
+    "Path/to/dev/mix_single",
+    ] 
+
+sr=16000
+NUM_EPOCHS =300
+BATCH_SIZE =32
+SAVE_EVERY=50
+GEN_EVERY=25
+LEARNING_RATE =0.005 * (BATCH_SIZE/256)
+checkpoint_path=None #"Checkpoints/Model_Chechpoint.pt"
+
+"""
+
+MODEL HYPER-PARAMETERS
+
+"""
+NAME="Model_Name"
+
+MAX_LEN =50
+Nq=12
+Params = {"num_tokens":1024,
+       "dim":384,
+       "noise_dim":384,
+       "max_spatial_seq_len":MAX_LEN,
+       "depth_seq_len":Nq,
+       "noise_depth":Nq,
+       "spatial_layers":8,
+       "depth_layers":6,
+       "dim_head":32,
+       "heads":12 }
+    
+
+def load_train_objs( DAC_Model, device,Params,LEARNING_RATE,checkpoint_path,NUM_EPOCHS):
+
+    DAC_Model = dac.DAC.load(DAC_Model)
+    DAC_Model.encoder.to(device)
+    DAC_Model.quantizer.to(device)
+    
+    if checkpoint_path:
+        print("checkpoint found : " , checkpoint_path)
+        checkpoint = torch.load(checkpoint_path,map_location=device,weights_only=False)
+        SE_Model_params = checkpoint['SE_Model_params']
+    else : 
+        SE_Model_params = Params
+    SE_Model= D_AR_Model(**SE_Model_params).to(device)
+    optimizer = torch.optim.AdamW(SE_Model.parameters(),
+                                  lr= LEARNING_RATE,
+                                  betas=(0.9, 0.95),
+                                  weight_decay=0.05)
+    lr_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer,
+                                                     lr_lambda=lambda epoch: cosine_decay(epoch,10, NUM_EPOCHS))
+
+    return DAC_Model, SE_Model, optimizer, lr_scheduler
+
+
+
+class D_AR_Trainer(Trainer):
+    pass
+        
+        
+
+def main(rank: int,
+         world_size: int,
+         DAC_Model,
+         device,
+         DATA_PATHS,
+         SAVE_EVERY: int,
+         GEN_EVERY:int,
+         NUM_EPOCHS: int,
+         BATCH_SIZE: int,
+         LEARNING_RATE,
+         Nq,
+         MAX_LEN ,
+         Params,
+         checkpoint_path,
+         NAME,
+         sr
+         ):
+    
+    ddp_setup(rank, world_size)
+    max_len=int(sr*(MAX_LEN/50))
+    clean_training= librosa.util.find_files( DATA_PATHS[0], ext='wav')[:10]
+    noisy_training= librosa.util.find_files(  DATA_PATHS[1], ext='wav')[:10] 
+    dataset=labled_AudioDataset(clean_training, noisy_training, max_len,random_start=False)
+    train_dataset=DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=False, sampler=DistributedSampler(dataset))
+    clean_validation= librosa.util.find_files( DATA_PATHS[2], ext='wav')[:10] 
+    noisy_validation= librosa.util.find_files( DATA_PATHS[3], ext='wav')[:10] 
+    dataset=labled_AudioDataset(clean_validation, noisy_validation, max_len,random_start=False)
+    val_dataset=DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=False,sampler=DistributedSampler(dataset))
+    
+    DAC_Model, SE_Model, optimizer, scheduler = load_train_objs(DAC_Model,device,Params,LEARNING_RATE,checkpoint_path,NUM_EPOCHS)
+    
+    
+    parameter_count=par_count(SE_Model)
+    print("Number of Model Parameters :",parameter_count)
+
+    trainer = D_AR_Trainer(  DAC_Model
+                      , SE_Model
+                      , rank
+                      , train_dataset
+                      , val_dataset
+                      , optimizer
+                      , scheduler
+                      , SAVE_EVERY
+                      , GEN_EVERY
+                      , Nq=Nq
+                      , sr=sr
+                      , NAME=NAME)
+    
+    if checkpoint_path:
+       start_epoch = trainer.load_from_checkpoint(checkpoint_path)
+    else:
+       start_epoch = 0
+    trainer.train(NUM_EPOCHS, start_epoch )
+    destroy_process_group()
+
+if __name__ == '__main__':
+
+    world_size = torch.cuda.device_count()
+    mp.spawn(main, args=(world_size,
+                         DAC_Model,
+                         device,
+                         DATA_PATHS,
+                         SAVE_EVERY,
+                         GEN_EVERY,
+                         NUM_EPOCHS,
+                         BATCH_SIZE,
+                         LEARNING_RATE,
+                         Nq,
+                         MAX_LEN,
+                         Params,
+                         checkpoint_path,
+                         NAME,
+                         sr ), nprocs=world_size)
