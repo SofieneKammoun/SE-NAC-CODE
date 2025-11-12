@@ -2,7 +2,7 @@
 
 This repository provides the official implementation of the paper *[Modeling strategies for speech enhancement in the latent space of a neural audio codec](https://arxiv.org/abs/2510.26299)* authored by Sofiene Kammoun, Xavier Alameda-Pineda and Simon Leglaive. We explore different modeling strategies (autoregressive vs. non-autoregressive) and representation spaces (discrete vs. continuous) for speech enhancement using neural audio codecs and Conformer-based architectures.
 
-[arXiv preprint]([arXiv](https://arxiv.org/abs/2510.26299)) | [Audio examples](https://sofienekammoun.github.io/SE-NAC-25/) | [Bibtex](#citation)
+[arXiv preprint](https://arxiv.org/abs/2510.26299) | [Audio examples](https://sofienekammoun.github.io/SE-NAC-25/) | [Bibtex](#citation)
 
 
 ##  Overview
@@ -74,11 +74,14 @@ To train a model, simply edit the configuration block at the top of `[Model_Name
 ```python
 DAC_Model = "DAC_MODELS/weights_16khz.pth"
 DATA_PATHS = [
-    "Path/to/train-360/s1",
-    "Path/to/train-360/mix_single",
-    "Path/to/dev/s1",
-    "Path/to/dev/mix_single",
+    "Path/to/train/clean",
+    "Path/to/train/mixture",
+    "Path/to/val/clean",
+    "Path/to/val/mixture",
 ]
+
+...
+
 ```
 
 Then launch distributed training:
@@ -94,6 +97,15 @@ All checkpoints and reconstructed audio samples will be automatically saved unde
 - Pretrained checkpoints  
 - Evaluation metrics and inference scripts
 
+## Acknowledgments
+This work was performed using computational resources from the Mésocentre computing center of Université Paris-Saclay, CentraleSupélec, and Ecole Normale Supérieure ParisSaclay, as part of the DEGREASE project (ANR-23-CE23-0009), funded by the French National Research Agency.
+
+Some code in this repository is adapted from the following repositories:
+
+- [RQ-Transformer](https://github.com/lucidrains/RQ-Transformer)
+- [rq-vae-transformer](https://github.com/kakaobrain/rq-vae-transformer)
+- [conformer](https://github.com/lucidrains/conformer)
+- [DAC](https://github.com/descriptinc/descript-audio-codec)
 
 ## Citation
 
