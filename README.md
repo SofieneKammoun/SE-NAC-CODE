@@ -1,10 +1,13 @@
 # Modeling strategies for speech enhancement in the latent space of a neural audio codec
 
-This repository provides the official implementation of our paper on *[Modeling strategies for speech enhancement in the latent space of a neural audio codec](https://arxiv.org/abs/2510.26299)*. We explore different modeling strategies (autoregressive vs. non-autoregressive) and representation spaces (discrete vs. continuous) for speech enhancement using neural audio codecs and Conformer-based architectures.
+This repository provides the official implementation of the paper *[Modeling strategies for speech enhancement in the latent space of a neural audio codec](https://arxiv.org/abs/2510.26299)* authored by Sofiene Kammoun, Xavier Alameda-Pineda and Simon Leglaive. We explore different modeling strategies (autoregressive vs. non-autoregressive) and representation spaces (discrete vs. continuous) for speech enhancement using neural audio codecs and Conformer-based architectures.
+
+[arXiv preprint]([arXiv](https://arxiv.org/abs/2510.26299)) | [Audio examples](https://sofienekammoun.github.io/SE-NAC-25/) | [Bibtex](#citation)
+
 
 ##  Overview
 
-Our work introduces and compares a family of generative speech enhancement models that systematically vary along two main axes:
+Our work introduces and compares a family of speech enhancement models that systematically vary along two main axes:
 
 - **Representation Type**  
   - Discrete tokens 
@@ -33,34 +36,34 @@ Additional models—**C-FT**, **D-FT**, and **C-NAR-FT**—will be added soon.
 The `Trainer` class encapsulates the components shared by all model variants:
 - Distributed training setup via `torch.distributed` and `mp.spawn`.
 - Core training and validation code.
-- Encoding, Decoding, and Tokenization methods using the DAC Model. 
+- Encoding, Decoding, and Tokenization methods using [Descript Audio Codec](https://github.com/descriptinc/descript-audio-codec) (DAC). 
 
-This file also contains the code for : 
+This file also contains the code for: 
 - Data loading through a custom dataset class (`labled_AudioDataset`).
-- Other helper functions
+- Other helper functions.
 
 
 ---
 
 ### 2. **Variant-Specific Trainers** 
 
-Each `[Model Name]_Trainer.py` file provides the full training loop for a given model variant by inheriting from the base `Trainer` and redefining the following methods:
+Each `[Model Name]_Trainer.py` file provides the full training script for a given model variant by inheriting from the base `Trainer` and redefining the following methods:
 - `process_batch_train_audio()`  
   Defines how the model processes noisy/clean audio pairs during training (e.g., encoding with DAC, quantization, and loss computation).
   
 - `_denoise_validation()`  
-  Implements model-specific inference logic to reconstruct clean speech during validation and compute SI-SDR/STOI scores.
+  Implements model-specific inference pipeline to reconstruct clean speech during validation and compute SI-SDR/STOI scores.
   
 - `_save_checkpoint()`  
   Saves model weights, optimizer states, and configuration parameters.
   
- while the `Models/` directory defines the corresponding architectures.
+ while the `Models/` directory contains files that define the corresponding model architectures.
  
 ### 3. **Audio Codec Integration**
-All variants use a pretrained **neural audio codec (DAC)** to:
+All variants use the same pretrained neural audio codec (DAC) to:
 - Encode raw waveforms into either discrete or continuous latent representations.
 - Quantize embeddings via a learned vector quantizer.
-- Decode model outputs back to waveform space for objective and perceptual evaluation.
+- Decode discrete or continuous latent representations back to waveforms for objective and perceptual evaluation.
 
 This modular approach allows any compatible codec to be substituted, facilitating future experiments.
 
@@ -83,7 +86,7 @@ Then launch distributed training:
 ```bash
 python C_AR_Trainer.py
 ```
-All checkpoints and reconstructed audio samples will be automatically saved under the corresponding directories
+All checkpoints and reconstructed audio samples will be automatically saved under the corresponding directories.
 
 ## Coming Soon
 
@@ -91,7 +94,8 @@ All checkpoints and reconstructed audio samples will be automatically saved unde
 - Pretrained checkpoints  
 - Evaluation metrics and inference scripts
 
----
+
+## Citation
 
 If you find this code useful, please star the project and consider citing:
 ```
