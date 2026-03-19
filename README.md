@@ -27,7 +27,9 @@ The current release includes the following models:
 | **C-AR** | Autoregressive | Continuous | Continuous | `C_AR_Trainer.py` |
 | **C-NAR** | Non-Autoregressive | Continuous | Continuous | `C_NAR_Trainer.py` |
 
-Additional models—**C-FT** (`C-FT_Trainer.py`)  and **D-FT** (`D-FT_Trainer.py`), where we only finetune the NAC's encoder with an MSE loss and a cross-entropy loss, respectively. 
+Additional models:
+- **C-FT** (`C-FT_Trainer.py`)  and **D-FT** (`D-FT_Trainer.py`), where we only finetune the NAC's encoder with an MSE loss and a cross-entropy loss, respectively. 
+- **STFT-NAR** (`C_NAR_Trainer.py`), where instead of the embeddings of the NAC, we work with STFT representations, and we train the model to output an STFT mask.
 
 ##  How the Code Works
 
