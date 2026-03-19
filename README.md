@@ -27,7 +27,7 @@ The current release includes the following models:
 | **C-AR** | Autoregressive | Continuous | Continuous | `C_AR_Trainer.py` |
 | **C-NAR** | Non-Autoregressive | Continuous | Continuous | `C_NAR_Trainer.py` |
 
-Additional models—**C-FT**, **D-FT**, and **C-NAR-FT**—will be added soon.
+Additional models—**C-FT** (`C-FT_Trainer.py`)  and **D-FT** (`D-FT_Trainer.py`), where we only finetune the NAC's encoder with an MSE loss and a cross-entropy loss, respectively. 
 
 ##  How the Code Works
 
@@ -93,7 +93,6 @@ All checkpoints and reconstructed audio samples will be automatically saved unde
 
 ## Coming Soon
 
-- Additional model variants (**C-FT**, **D-FT**, **C-NAR-FT**)  
 - Pretrained checkpoints  
 - Evaluation metrics and inference scripts
 
