@@ -1,8 +1,10 @@
 # Modeling strategies for speech enhancement in the latent space of a neural audio codec
 
-This repository provides the official implementation of the paper *[Modeling strategies for speech enhancement in the latent space of a neural audio codec](https://arxiv.org/abs/2510.26299)* authored by Sofiene Kammoun, Xavier Alameda-Pineda and Simon Leglaive. We explore different modeling strategies (autoregressive vs. non-autoregressive) and representation spaces (discrete vs. continuous) for speech enhancement using neural audio codecs and Conformer-based architectures.
+This repository provides the official implementation of the paper *[Modeling strategies for speech enhancement in the latent space of a neural audio codec](https://arxiv.org/abs/2510.26299)* authored by Sofiene Kammoun, Xavier Alameda-Pineda and Simon Leglaive, and published at IEEE ICASSP 2026. 
 
-[arXiv preprint](https://arxiv.org/abs/2510.26299) | [Audio examples](https://sofienekammoun.github.io/SE-NAC-25/) | [Bibtex](#citation)
+We explore different modeling strategies (autoregressive vs. non-autoregressive) and representation spaces (discrete vs. continuous) for speech enhancement using neural audio codecs and Conformer-based architectures.
+
+[arXiv](https://arxiv.org/abs/2510.26299) | [Audio examples](https://sofienekammoun.github.io/SE-NAC-25/) | [Bibtex](#citation)
 
 
 ##  Overview
@@ -110,12 +112,12 @@ Some code in this repository is adapted from the following repositories:
 
 ## Citation
 
-If you find this code useful, please star the project and consider citing:
+If you use this code, please star the project and cite:
 ```
-@article{kammoun2025modeling,
+@inproceedings{kammoun2026modeling,
   title={Modeling strategies for speech enhancement in the latent space of a neural audio codec},
   author={Kammoun, Sofiene and Alameda-Pineda, Xavier and Leglaive, Simon},
-  journal={arXiv preprint arXiv:2510.26299},
-  year={2025}
+  booktitle={IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)},
+  year={2026}
 }
 ```
