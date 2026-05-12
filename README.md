@@ -31,7 +31,7 @@ The current release includes the following models:
 
 Additional models:
 - **C-FT** (`C-FT_Trainer.py`)  and **D-FT** (`D-FT_Trainer.py`), where we only finetune the NAC's encoder with an MSE loss and a cross-entropy loss, respectively. 
-- **STFT-NAR** (`C_NAR_Trainer.py`), where instead of the embeddings of the NAC, we work with STFT representations, and we train the model to output an STFT mask.
+- **STFT-NAR** (`STFT_NAR_Trainer.py`), where instead of the embeddings of the NAC, we work with STFT representations, and we train the model to output an STFT mask.
 
 ##  How the Code Works
 
@@ -95,9 +95,12 @@ python C_AR_Trainer.py
 ```
 All checkpoints and reconstructed audio samples will be automatically saved under the corresponding directories.
 
+## Pretrained checkpoints  
+
+- [Available on Huggingface.](https://huggingface.co/SofieneK/SE-NAC) 
+
 ## Coming Soon
 
-- Pretrained checkpoints  
 - Evaluation metrics and inference scripts
 
 ## Acknowledgments
